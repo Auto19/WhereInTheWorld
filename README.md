@@ -3,13 +3,18 @@ A project that shows where in the world something is.  Ie where are current plan
 
 ## Controls
 Use z and x to zoom
+
 click and drag to move the globe
+
 Select objects to have them rendered on the globe
+
 
 ## To Update Data
 cd into the scripts folder (important that you are in there when running the scripts, the scripts use relative pathing)
 
+
 no command arguments, just run the scripts as they are. Python3
+
 ie 'python3 -i ScrapCropData.py'
 
 ## Start the server on localhost as otherwise the image pathing won't work
