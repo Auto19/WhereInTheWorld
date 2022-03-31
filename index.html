@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.139.0/build/three.module.js"
+        }
+    }
+    </script>
+
+    <script type='module'>
+    import * as THREE from 'three';
+
+    //set as needed
+    const scrollbarWidth = document.body.offsetWidth - document.body.clientWidth;
+    const componentWidth = innerWidth - scrollbarWidth - 20;
+    const componentHeight = innerHeight - scrollbarWidth - 20;
+
+
+    const scene = new THREE.Scene()
+    const camera = new THREE.PerspectiveCamera(
+        75,
+        componentWidth / componentHeight,
+        0.1,
+        1000
+    )
+
+    const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true
+    })
+
+
+    renderer.setSize(componentWidth, componentHeight)
+    renderer.setPixelRatio(window.devicePixelRatio)
+    renderer.domElement.id = 'Globe';
+    document.body.appendChild(renderer.domElement)
+
+
+    const group = new THREE.Group()
+
+    //create a background: https://medium.com/nerd-for-tech/adding-a-custom-star-field-background-with-three-js-79a1d18fd35d
+
+    const getRandomParticelPos = (particleCount) => {
+        const arr = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            arr[i] = (Math.random() - 0.5) * 550;
+            console.log(arr[i])
+        }
+        return arr;
+    };
+
+    const loader = new THREE.TextureLoader();
+    const StarMaterial = new THREE.PointsMaterial({
+        size: .5,
+        transparent: true,
+        color: 0xFFFFFF
+    });
+
+    const Stargeometry = new THREE.BufferGeometry();
+
+
+    Stargeometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(getRandomParticelPos(10000), 3)
+    );
+
+    const cubere = new THREE.Points(Stargeometry, StarMaterial);
+
+    group.add(cubere);
+
+
+    // END Background
+
+    //started with this project and built from there: https://www.youtube.com/watch?v=vM8M4QloVL0
+    const globe = new THREE.Mesh(
+        new THREE.SphereGeometry(5, 50, 50),
+        new THREE.MeshBasicMaterial({
+            //color: 0xFFFFFF
+            map: new THREE.TextureLoader().load('/imgs/bases/earthbasereduced.jpg')
+        })
+    )
+
+    //scene.add(globe)
+
+    group.add(globe)
+
+
+
+    console.log(globe)
+
+    const crops =      ["Barley", "Corn", "Cotton", "Millet", "Palmoil", "Peanut", "Rapeseed", "Rice", "Sorghum", "Soybean", "Sunflower", "Wheat"];
+    const cropColors = [0x0000FF, 0x00FF00, 0xFF0000, 0xFF00FF, 0xFFFF00, 0x00FFFF, 0xFFA500,  0x00FFAE, 0x00e8ff, 0xA600FF, 0xFF0061, 0xb6ff00];
+    var cropObjectContainer = []
+
+    for(var i = 0; i < crops.length; i++) {
+        //const randomColor = Math.floor(Math.random()*16777215).toString(16); //https://css-tricks.com/snippets/javascript/random-hex-color/
+
+        cropObjectContainer[i] = new THREE.Mesh(
+            new THREE.SphereGeometry(5.01, 50, 50),
+            new THREE.MeshBasicMaterial({
+                color: cropColors[i], //new THREE.Color("#".concat(randomColor)),
+                map: new THREE.TextureLoader().load('/imgs/crops/'.concat(crops[i], '.png'))
+            })
+        )
+
+        cropObjectContainer[i].material.transparent = true;
+        cropObjectContainer[i].material.opacity = .7;
+        cropObjectContainer[i].name = crops[i];
+        cropObjectContainer[i].visible = false;
+
+        //scene.add(cropObjectContainer[i]);
+        group.add(cropObjectContainer[i]);
+
+        //definitely could be optimized, maybe switch to front-loading
+        document.querySelector("input[name=".concat(crops[i].toLowerCase(),"]")).addEventListener('change', function() {
+            if (this.checked) {
+                cropObjectContainer[crops.indexOf(this.value)].visible = true; //EVAL
+            } else {
+                cropObjectContainer[crops.indexOf(this.value)].visible = false;
+            }
+        });
+
+    }
+
+    const boats = ["Cargo", "Fishing", "Military", "Other"];
+    var BoatContainer = []
+
+    for(var i = 0; i < boats.length; i++) {
+        BoatContainer[i] = new THREE.Mesh(
+            new THREE.SphereGeometry(5.02, 50, 50),
+            new THREE.MeshBasicMaterial({
+                //color: 0xFFFFFF
+                map: new THREE.TextureLoader().load('/imgs/boats/'.concat(boats[i], '.png'))
+            })
+        )
+        BoatContainer[i].material.transparent = true;
+        BoatContainer[i].visible = false;
+
+        group.add(BoatContainer[i]);
+
+        document.querySelector("input[name=".concat(boats[i].toLowerCase(),"]")).addEventListener('change', function() {
+            if (this.checked) {
+                BoatContainer[boats.indexOf(this.value)].visible = true; //EVAL
+            } else {
+                BoatContainer[boats.indexOf(this.value)].visible = false;
+            }
+        });
+    }
+
+    //Flights
+    const flights = new THREE.Mesh(
+        new THREE.SphereGeometry(5.02, 50, 50),
+        new THREE.MeshBasicMaterial({
+            //color: 0xFFFFFF
+            map: new THREE.TextureLoader().load('/imgs/flights/Flights.png')
+        })
+    )
+    flights.material.transparent = true;
+    flights.visible = false;
+
+    group.add(flights);
+
+    document.querySelector("input[name=flights]").addEventListener('change', function() {
+        if (this.checked) {
+            flights.visible = true;
+        } else {
+            flights.visible = false;
+        }
+    });
+
+
+    scene.add(group);
+
+
+
+    camera.position.z = 14
+
+    var mouseDown = 0;
+    document.body.onmousedown = function() {
+        ++mouseDown;
+    }
+    document.body.onmouseup = function() {
+        --mouseDown;
+    }
+
+
+
+
+
+    const currMouse = {
+        x: 0,
+        y: 0
+    }
+
+    const mouse = {
+        x: 0,
+        y: 0
+    }
+
+    addEventListener('mousedown', () => {
+        var init = true;
+        document.body.onmousemove = function(event) {
+            if(init) {
+                currMouse.x = event.clientX;
+                currMouse.y = event.clientY;
+                init = false;
+            }
+            mouse.x = (event.clientX - currMouse.x) / componentWidth * .1;
+            mouse.y = (event.clientY - currMouse.y) / componentHeight * .1;
+        }
+    })
+
+    addEventListener('mouseup', () => {
+        document.body.onmousemove = null;
+        mouse.x = .001;
+        mouse.y = 0;
+    })
+
+    //zoom commands
+    document.addEventListener('keydown', () => {
+        if(event.keyCode == 88) {
+            camera.position.z += 1
+        } else if(event.keyCode == 90) {
+            camera.position.z -= 1
+        }
+    });
+
+
+    //stolen shader: http://stemkoski.github.io/Three.js/Shader-Glow.html
+    // create custom material from the shader code above
+	//   that is within specially labeled script tags
+	var customMaterial = new THREE.ShaderMaterial(
+	{
+	    uniforms:
+		{
+			"c":   { type: "f", value: 0.28 },
+			"p":   { type: "f", value: 1.9 },
+			glowColor: { type: "c", value: new THREE.Color(0x87ceeb) },
+			viewVector: { type: "v3", value: camera.position }
+		},
+		vertexShader:   "uniform vec3 viewVector;uniform float c;uniform float p;varying float intensity;void main() {vec3 vNormal = normalize( normalMatrix * normal );vec3 vNormel = normalize( normalMatrix * viewVector );intensity = pow( c - dot(vNormal, vNormel), p ); gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );}",
+		fragmentShader: "uniform vec3 glowColor;varying float intensity;void main() {vec3 glow = glowColor * intensity;gl_FragColor = vec4( glow, 1.0 );}",
+		side: THREE.BackSide,
+		blending: THREE.AdditiveBlending,
+		transparent: true
+	}   );
+
+	const Glow = new THREE.Mesh( new THREE.SphereGeometry(5.01, 50, 50), customMaterial.clone() );
+    //moonGlow.position = globe.position;
+	Glow.scale.multiplyScalar(1.2);
+	scene.add( Glow );
+
+    function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+        //globe.rotation.y += .001
+        //corn.rotation.y += .001
+        group.rotation.y += mouse.x;
+        group.rotation.x += mouse.y;
+    }
+    animate();
+
+
+
+
+    </script>
+
+
+    <style>
+        .menu {
+            position: absolute;
+            background-color: white;
+            z-index: 9;
+            margin: 20px;
+            min-width: 180px;
+        }
+        .crop-selection, .boat-selection, .flights {
+            margin-top: 20px;
+            margin-bottom: 20px;
+            margin-right: 20px;
+            margin-left: 20px;
+            font-family: "Comic Sans", "Courier New", monospace;
+            letter-spacing: .1rem;
+        }
+    </style>
+</head>
+<body style="background: black">
+    <div class="menu">
+        <div class="crop-selection">
+            <p id="Crop-title"> Crops </p>
+            <input type="checkbox" id="barley" name="barley" value="Barley">
+            <label for="barley">Barley</label><br>
+
+            <input type="checkbox" id="corn" name="corn" value="Corn">
+            <label for="corn">Corn</label><br>
+
+            <input type="checkbox" id="cotton" name="cotton" value="Cotton">
+            <label for="cotton">Cotton</label><br>
+
+            <input type="checkbox" id="millet" name="millet" value="Millet">
+            <label for="millet">Millet</label><br>
+
+            <input type="checkbox" id="palmoil" name="palmoil" value="Palmoil">
+            <label for="palmoil">Palm Oil</label><br>
+
+            <input type="checkbox" id="peanut" name="peanut" value="Peanut">
+            <label for="peanut">Peanut</label><br>
+
+            <input type="checkbox" id="rapeseed" name="rapeseed" value="Rapeseed">
+            <label for="rapeseed">Rapeseed</label><br>
+
+            <input type="checkbox" id="rice" name="rice" value="Rice">
+            <label for="rice">Rice</label><br>
+
+            <input type="checkbox" id="sorghum" name="sorghum" value="Sorghum">
+            <label for="sorghum">Sorghum</label><br>
+
+            <input type="checkbox" id="soybean" name="soybean" value="Soybean">
+            <label for="soybean">Soybean</label><br>
+
+            <input type="checkbox" id="sunflower" name="sunflower" value="Sunflower">
+            <label for="sunflower">Sunflower</label><br>
+
+            <input type="checkbox" id="wheat" name="wheat" value="Wheat">
+            <label for="wheat">Wheat</label><br>
+        </div>
+        <div class="boat-selection">
+            <p id="Boat-title"> Boats </p>
+            <input type="checkbox" id="cargo" name="cargo" value="Cargo">
+            <label for="cargo">Cargo</label><br>
+
+            <input type="checkbox" id="fishing" name="fishing" value="Fishing">
+            <label for="fishing">Fishing</label><br>
+
+            <input type="checkbox" id="military" name="military" value="Military">
+            <label for="military">Military</label><br>
+
+            <input type="checkbox" id="other" name="other" value="Other">
+            <label for="other">Others</label><br>
+        </div>
+        <div class="flights">
+            <p id="Boat-title"> Flights </p>
+            <input type="checkbox" id="flights" name="flights" value="Flights">
+            <label for="flights">Planes</label><br>
+        </div>
+    </div>
+</body>
+</html>
