@@ -102,7 +102,7 @@ for ship in ships:
             CargoDraw.rectangle([(x1, y1), (x1+6, y1+6)], fill=(255, 0, 0, 255))
 
         elif(ship.get('flags') == 5):
-            FishingDraw.rectangle([(x1, y1), (x1+6,y1+6)], fill=(255, 191, 0, 255))
+            FishingDraw.rectangle([(x1, y1), (x1+6,y1+6)], fill=(255, 220, 0, 255))
 
         elif(ship.get('flags') == 7):
             MilitaryDraw.rectangle([(x1, y1), (x1+6,y1+6)], fill=(128, 0, 128, 255))
